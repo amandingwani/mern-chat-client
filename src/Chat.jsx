@@ -3,6 +3,7 @@ import _ from "lodash";
 import Avatar from "./Avatar";
 import Logo from "./Logo";
 import { UserContext } from "./UserContext";
+import axios from "axios";
 
 export default function Chat() {
     const [ws, setWs] = useState(null);
@@ -14,10 +15,21 @@ export default function Chat() {
     const messagesBoxRef = useRef();
 
     useEffect(() => {
+        connectToWs();
+    }, []);
+
+    function connectToWs() {
         const ws = new WebSocket('ws://localhost:4000');
         setWs(ws);
         ws.addEventListener('message', handleMessage);
-    }, []);
+        ws.addEventListener('close', () => {
+            console.log('WS disconnected');
+            setTimeout(() => {
+                console.log('Trying to reconnect to ws');
+                connectToWs();
+            }, 1000);
+        })
+    }
 
     function showOnlinePeople(peopleArr) {
         const people = {};
@@ -45,21 +57,28 @@ export default function Chat() {
             text: newMsgText
         }));
         setMessages(prev => ([...prev, {
-            id: Date.now(),
+            _id: Date.now(),
             sender: id,
             recipient: selectedUserId,
             text: newMsgText
         }]));
         setNewMsgText('');
-        // const div = messagesBoxRef.current;
-        // div.scrollTop = div.scrollHeight;
     }
 
-    const messagesWithoutDupes = _.uniqBy(messages, "id");
+    const messagesWithoutDupes = _.uniqBy(messages, "_id");
 
     useEffect(() => {
         messagesBoxRef.current?.lastElementChild?.scrollIntoView();
     }, [messagesWithoutDupes]);
+
+    useEffect(() => {
+        if (selectedUserId) {
+            axios.get('/messages/' + selectedUserId)
+                .then((res) => {
+                    setMessages(res.data);
+                });
+        }
+    }, [selectedUserId]);
 
     return(
         <div className="flex h-screen">
@@ -91,8 +110,8 @@ export default function Chat() {
                         <div className="relative h-full">
                             <div ref={messagesBoxRef} className="absolute inset-0 overflow-auto">
                                 {messagesWithoutDupes.map(m => (
-                                    <div key={m.id} className={(m.sender === id ? 'text-right' : 'text-left')}>
-                                        <div key={m.id} className={"inline-block text-left p-2 my-2 rounded-md text-sm " + (m.sender === id ? 'bg-blue-500 text-white' : 'bg-white text-gray-500')}>
+                                    <div key={m._id} className={(m.sender === id ? 'text-right' : 'text-left')}>
+                                        <div className={"inline-block text-left p-2 my-2 rounded-md text-sm " + (m.sender === id ? 'bg-blue-500 text-white' : 'bg-white text-gray-500')}>
                                             {m.text}
                                         </div>
                                     </div>
