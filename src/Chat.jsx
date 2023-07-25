@@ -1,13 +1,14 @@
 import { useContext, useEffect, useState, useRef} from "react";
 import _ from "lodash";
-import Avatar from "./Avatar";
 import Logo from "./Logo";
 import { UserContext } from "./UserContext";
 import axios from "axios";
+import Contact from "./Contact";
 
 export default function Chat() {
     const [ws, setWs] = useState(null);
     const [onlinePeople, setOnlinePeople] = useState({});
+    const [offlinePeople, setOfflinePeople] = useState({});
     const [selectedUserId, setSelectedUserId] = useState(null);
     const [newMsgText, setNewMsgText] = useState('');
     const [messages, setMessages] = useState([]);
@@ -71,6 +72,35 @@ export default function Chat() {
         messagesBoxRef.current?.lastElementChild?.scrollIntoView();
     }, [messagesWithoutDupes]);
 
+    // set offline people as soon as online people are set
+    useEffect(() => {
+        axios.get('/people').then(res => {
+            const allUsersArr = res.data;
+
+            // offline people = all - online - ourself
+            const onlinePeopleAndMe = {
+                ...onlinePeople,
+                [id]: username
+            };
+
+            const offlinePeopleArr = allUsersArr.filter(u => {
+                let isUserOnline = false;
+                Object.keys(onlinePeopleAndMe).forEach(key => {
+                    if (key === u._id)
+                        isUserOnline = true;
+                });
+                return !isUserOnline;
+            });
+
+            let offlinePeopleObjects = {}
+            offlinePeopleArr.forEach(p => {
+                offlinePeopleObjects[p._id] = p.username;
+            });
+            setOfflinePeople(offlinePeopleObjects);
+
+        })
+    }, [onlinePeople]);
+
     useEffect(() => {
         if (selectedUserId) {
             axios.get('/messages/' + selectedUserId)
@@ -85,18 +115,23 @@ export default function Chat() {
             <div className="bg-blue-50 w-1/3">
                 <Logo />
                 {/* making an array of divs using map */}
+                {/* online people */}
                 {Object.keys(onlinePeople).map(userId => (
-                    <div onClick={() => setSelectedUserId(userId)}
-                        className={"border-b border-gray-200 flex items-center gap-2 cursor-pointer " + (userId === selectedUserId ? "bg-blue-100" : "")} 
-                        key={userId}>
-                            {userId === selectedUserId && (
-                                <div className="w-1 bg-blue-500 h-12 rounded-r-md"></div>    
-                            )}
-                            <div className="flex py-2 p-4 gap-2 items-center">
-                                <Avatar userId={userId} username={onlinePeople[userId]}/>
-                                <span className="text-gray-800">{onlinePeople[userId]}</span>
-                            </div>
-                    </div>
+                    <Contact userId={userId} 
+                        onClick={() => setSelectedUserId(userId)}
+                        isSelected={userId === selectedUserId}
+                        username={onlinePeople[userId]}
+                        online={true}
+                    />
+                ))}
+                {/* offline people */}
+                {Object.keys(offlinePeople).map(userId => (
+                    <Contact userId={userId} 
+                        onClick={() => setSelectedUserId(userId)}
+                        isSelected={userId === selectedUserId}
+                        username={offlinePeople[userId]}
+                        online={false}
+                    />
                 ))}
             </div>
             <div className="bg-blue-100 w-2/3 flex flex-col p-2 gap-2">
