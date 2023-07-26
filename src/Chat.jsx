@@ -177,11 +177,13 @@ export default function Chat() {
                         <div className="relative h-full">
                             <div ref={messagesBoxRef} className="absolute inset-0 overflow-auto">
                                 {messagesWithoutDupes.map(m => (
-                                    <div key={m._id} className={(m.sender === id ? 'text-right' : 'text-left')}>
-                                        <div className={"inline-block text-left p-2 my-2 rounded-md text-sm " + (m.sender === id ? 'bg-blue-500 text-white' : 'bg-white text-gray-500')}>
-                                            {m.text}
+                                    (m.sender === selectedUserId || m.sender === id) && (
+                                        <div key={m._id} className={(m.sender === id ? 'text-right' : 'text-left')}>
+                                            <div className={"inline-block text-left p-2 my-2 rounded-md text-sm " + (m.sender === id ? 'bg-blue-500 text-white' : 'bg-white text-gray-500')}>
+                                                {m.text}
+                                            </div>
                                         </div>
-                                    </div>
+                                    )
                                 ))}
                             </div>
                         </div>
