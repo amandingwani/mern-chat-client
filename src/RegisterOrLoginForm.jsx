@@ -1,6 +1,7 @@
 import { useContext, useState } from "react";
 import axios from "axios";
 import { UserContext } from "./UserContext";
+import Logo from "./Logo";
 
 export default function RegisterOrLoginForm() {
     const [username, setUsername] = useState('');
@@ -17,7 +18,8 @@ export default function RegisterOrLoginForm() {
     }
 
     return (
-        <div className="bg-blue-50 h-screen flex items-center">
+        <div className="bg-blue-50 h-screen flex flex-col items-center justify-center gap-4">
+            <Logo page={"login"}/>
             <form onSubmit={handleSubmit} className="w-64 mx-auto mb-16">
                 <input type="text" 
                 value={username}
