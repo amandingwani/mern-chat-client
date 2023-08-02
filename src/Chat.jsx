@@ -21,7 +21,7 @@ export default function Chat() {
 
     function connectToWs() {
         if (!ws) {
-            const ws = new WebSocket('ws://localhost:4000');
+            const ws = new WebSocket('ws://' + import.meta.env.VITE_API_URL.split('/')[2]);
             setWs(ws);
             ws.addEventListener('message', handleMessage);
             ws.addEventListener('close', (ev) => {
