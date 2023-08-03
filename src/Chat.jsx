@@ -53,7 +53,11 @@ export default function Chat() {
 
     function handleMessage(ev) {
         const msgData = JSON.parse(ev.data);
-        if ('online' in msgData) {
+        if ('error' in msgData) {
+            setSelectedUserId(null);
+            setServerErrorFlag(true);
+        }
+        else if ('online' in msgData) {
             showOnlinePeople(msgData.online);
         }
         else if ('text' in msgData) {
@@ -125,7 +129,13 @@ export default function Chat() {
         if (selectedUserId) {
             axios.get('/messages/' + selectedUserId)
                 .then((res) => {
-                    setMessages(res.data);
+                    if (res.data.error) {
+                        setSelectedUserId(null);
+                        setServerErrorFlag(true);
+                    }
+                    else {
+                        setMessages(res.data);
+                    }
                 });
         }
     }, [selectedUserId]);
