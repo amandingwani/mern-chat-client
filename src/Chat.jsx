@@ -12,6 +12,7 @@ export default function Chat() {
     const [selectedUserId, setSelectedUserId] = useState(null);
     const [newMsgText, setNewMsgText] = useState('');
     const [messages, setMessages] = useState([]);
+    const [serverErrorFlag, setServerErrorFlag] = useState(false);
     const {id, username, setId, setUsername} = useContext(UserContext);
     const messagesBoxRef = useRef();
 
@@ -90,29 +91,33 @@ export default function Chat() {
     // set offline people as soon as online people are set
     useEffect(() => {
         axios.get('/people').then(res => {
-            const allUsersArr = res.data;
-
-            // offline people = all - online - ourself
-            const onlinePeopleAndMe = {
-                ...onlinePeople,
-                [id]: username
-            };
-
-            const offlinePeopleArr = allUsersArr.filter(u => {
-                let isUserOnline = false;
-                Object.keys(onlinePeopleAndMe).forEach(key => {
-                    if (key === u._id)
-                        isUserOnline = true;
+            if (res.data.error) {
+                setServerErrorFlag(true);
+            }
+            else {
+                const allUsersArr = res.data;
+    
+                // offline people = all - online - ourself
+                const onlinePeopleAndMe = {
+                    ...onlinePeople,
+                    [id]: username
+                };
+    
+                const offlinePeopleArr = allUsersArr.filter(u => {
+                    let isUserOnline = false;
+                    Object.keys(onlinePeopleAndMe).forEach(key => {
+                        if (key === u._id)
+                            isUserOnline = true;
+                    });
+                    return !isUserOnline;
                 });
-                return !isUserOnline;
-            });
-
-            let offlinePeopleObjects = {}
-            offlinePeopleArr.forEach(p => {
-                offlinePeopleObjects[p._id] = p.username;
-            });
-            setOfflinePeople(offlinePeopleObjects);
-
+    
+                let offlinePeopleObjects = {}
+                offlinePeopleArr.forEach(p => {
+                    offlinePeopleObjects[p._id] = p.username;
+                });
+                setOfflinePeople(offlinePeopleObjects);
+            }
         })
     }, [onlinePeople]);
 
@@ -132,27 +137,31 @@ export default function Chat() {
                     <div className="relative h-full">
                         <div className="absolute inset-0 overflow-auto">
                             <Logo />
-                            {/* making an array of divs using map */}
-                            {/* online people */}
-                            {Object.keys(onlinePeople).map(userId => (
-                                <Contact key={userId} 
-                                    userId={userId} 
-                                    onClick={() => setSelectedUserId(userId)}
-                                    isSelected={userId === selectedUserId}
-                                    username={onlinePeople[userId]}
-                                    online={true}
-                                />
-                            ))}
-                            {/* offline people */}
-                            {Object.keys(offlinePeople).map(userId => (
-                                <Contact key={userId} 
-                                    userId={userId} 
-                                    onClick={() => setSelectedUserId(userId)}
-                                    isSelected={userId === selectedUserId}
-                                    username={offlinePeople[userId]}
-                                    online={false}
-                                />
-                            ))}
+                            {!serverErrorFlag && (
+                                <div>
+                                    {/* making an array of divs using map */}
+                                    {/* online people */}
+                                    {Object.keys(onlinePeople).map(userId => (
+                                        <Contact key={userId} 
+                                            userId={userId} 
+                                            onClick={() => setSelectedUserId(userId)}
+                                            isSelected={userId === selectedUserId}
+                                            username={onlinePeople[userId]}
+                                            online={true}
+                                        />
+                                    ))}
+                                    {/* offline people */}
+                                    {Object.keys(offlinePeople).map(userId => (
+                                        <Contact key={userId} 
+                                            userId={userId} 
+                                            onClick={() => setSelectedUserId(userId)}
+                                            isSelected={userId === selectedUserId}
+                                            username={offlinePeople[userId]}
+                                            online={false}
+                                        />
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -169,8 +178,11 @@ export default function Chat() {
             <div className="bg-blue-100 w-2/3 flex flex-col p-2 gap-2">
                 <div className="flex-grow">
                     {!selectedUserId && (
-                        <div className="flex h-full items-center justify-center">
+                        <div className="flex flex-col gap-4 h-full items-center justify-center">
                             <div className="text-gray-400">MernChat: Send and receive messages</div>
+                            {serverErrorFlag && (
+                                <div className="text-red-600">Chat disconnected: Internal Server Error</div>
+                            )}
                         </div>
                     )}
                     {selectedUserId && (
