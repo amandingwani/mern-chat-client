@@ -17,6 +17,9 @@ export default function RegisterOrLoginForm() {
         if (data.error) {
             setErrMsg('Internal Server Error');
         }
+        else if (data.msg) {
+            setErrMsg(data.msg);
+        }
         else {
             setLoggedInUsername(username);
             setId(data.id);
