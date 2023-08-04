@@ -32,10 +32,12 @@ export default function RegisterOrLoginForm() {
             <form onSubmit={handleSubmit} className="w-64 mx-auto mb-16">
                 <input type="text" 
                     value={username}
+                    required
                     onChange={ev => setUsername(ev.target.value)} placeholder="username" className="block w-full rounded-sm p-2 mb-2 border"
                 />
                 <input type="password" 
                     value={password}
+                    required
                     onChange={ev => setPassword(ev.target.value)} placeholder="password" className="block w-full rounded-sm p-2 mb-2 border"
                 />
                 <div className="text-center text-red-600">{errMsg}</div>
