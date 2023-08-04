@@ -61,7 +61,7 @@ export default function Chat() {
             showOnlinePeople(msgData.online);
         }
         else if ('text' in msgData) {
-            setMessages(prev => ([...prev, {...msgData}]));
+            setMessages(prev => ([...prev, {...msgData, formattedTime: new Date().toLocaleString('en-us', { dateStyle: "short", timeStyle:"short", hour12: false})}]));
         }
     }
 
@@ -75,7 +75,8 @@ export default function Chat() {
             _id: Date.now(),
             sender: id,
             recipient: selectedUserId,
-            text: newMsgText
+            text: newMsgText,
+            formattedTime: new Date().toLocaleString('en-us', { dateStyle: "short", timeStyle:"short", hour12: false})
         }]));
         setNewMsgText('');
     }
@@ -134,11 +135,18 @@ export default function Chat() {
                         setServerErrorFlag(true);
                     }
                     else {
-                        setMessages(res.data);
+                        const allMessages = res.data;
+    
+                        allMessages.forEach(m => {
+                            m.formattedTime = new Date(m.createdAt).toLocaleString('en-us', { dateStyle: "short", timeStyle:"short", hour12: false})
+                        });
+
+                        setMessages(allMessages);
                     }
                 });
         }
     }, [selectedUserId]);
+
 
     return(
         <div className="flex h-screen">
@@ -201,8 +209,9 @@ export default function Chat() {
                                 {messagesWithoutDupes.map(m => (
                                     (m.sender === selectedUserId || m.sender === id) && (
                                         <div key={m._id} className={(m.sender === id ? 'text-right' : 'text-left')}>
-                                            <div className={"inline-block text-left p-2 my-2 rounded-md text-sm " + (m.sender === id ? 'bg-blue-500 text-white' : 'bg-white text-gray-500')}>
-                                                {m.text}
+                                            <div className={"inline-block my-2 p-1 rounded-md " + (m.sender === id ? 'bg-blue-500 text-white' : 'bg-white text-gray-500')}>
+                                                <span className="text-[16px] ml-1 mr-4">{m.text}</span>
+                                                <span className={"text-[11px] " + (m.sender === id ? "text-gray-300" : "text-gray-400")}>{m.formattedTime}</span>
                                             </div>
                                         </div>
                                     )
