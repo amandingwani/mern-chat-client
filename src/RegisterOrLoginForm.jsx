@@ -13,16 +13,20 @@ export default function RegisterOrLoginForm() {
     async function handleSubmit(ev) {
         ev.preventDefault();
         const url = isLogin ? '/login' : '/register';
-        const {data} = await axios.post(url, {username, password});
-        if (data.error) {
+        try {
+            const {data} = await axios.post(url, {username, password});
+            if (data.error) {
+                setErrMsg('Internal Server Error');
+            }
+            else if (data.msg) {
+                setErrMsg(data.msg);
+            }
+            else {
+                setLoggedInUsername(username);
+                setId(data.id);
+            }
+        } catch (error) {
             setErrMsg('Internal Server Error');
-        }
-        else if (data.msg) {
-            setErrMsg(data.msg);
-        }
-        else {
-            setLoggedInUsername(username);
-            setId(data.id);
         }
     }
 
