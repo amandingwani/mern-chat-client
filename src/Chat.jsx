@@ -143,6 +143,10 @@ export default function Chat() {
 
                         setMessages(allMessages);
                     }
+                })
+                .catch(err => {
+                    setSelectedUserId(null);
+                    setServerErrorFlag(true);
                 });
         }
     }, [selectedUserId]);
