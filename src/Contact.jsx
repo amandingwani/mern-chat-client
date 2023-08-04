@@ -8,9 +8,9 @@ export default function Contact({userId, onClick, isSelected, username, online})
                 {isSelected && (
                     <div className="w-1 bg-blue-500 h-12 rounded-r-md"></div>    
                 )}
-                <div className="flex py-2 p-4 gap-2 items-center">
+                <div className="flex py-2 p-4 gap-2 items-center w-[100%]">
                     <Avatar online={online} userId={userId} username={username}/>
-                    <span className="text-gray-800">{username}</span>
+                    <span className="text-gray-800 truncate">{username}</span>
                 </div>
         </div>
     );
