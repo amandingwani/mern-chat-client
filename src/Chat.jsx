@@ -4,6 +4,7 @@ import Logo from "./Logo";
 import { UserContext } from "./UserContext";
 import axios from "axios";
 import Contact from "./Contact";
+import './Chat.css'
 
 export default function Chat() {
     const [ws, setWs] = useState(null);
@@ -151,9 +152,28 @@ export default function Chat() {
         }
     }, [selectedUserId]);
 
+    useEffect(() => {
+        const handleWindowResize = () => {
+            setViewHeight();
+        };
+
+        setViewHeight();
+        window.addEventListener('resize', handleWindowResize);
+
+        return () => {
+            window.removeEventListener('resize', handleWindowResize);
+        };
+    });
+
+    function setViewHeight() {
+        // console.log('setViewHeight');
+        let vh = window.innerHeight * 0.01;
+        document.documentElement.style.setProperty('--vh', `${vh}px`);
+    }
+
 
     return(
-        <div className="flex h-screen">
+        <div className="flex mernchat-main-page">
             <div className="bg-blue-50 w-1/3 flex flex-col">
                 <div className="flex-grow">
                     <div className="relative h-full">
