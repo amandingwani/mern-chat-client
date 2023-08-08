@@ -14,6 +14,8 @@ export default function Chat() {
     const [newMsgText, setNewMsgText] = useState('');
     const [messages, setMessages] = useState([]);
     const [serverErrorFlag, setServerErrorFlag] = useState(false);
+    const [friend, setFriend] = useState('');
+    const [addFriendMsg, setAddFriendMsg] = useState(null);
     const {id, username, setId, setUsername} = useContext(UserContext);
     const messagesBoxRef = useRef();
 
@@ -86,6 +88,27 @@ export default function Chat() {
         axios.post('/logout').then(() => {
             ws.close(4000, 'logout');
         });
+    }
+
+    function addFriend(ev) {
+        ev.preventDefault();
+        console.log('addFriend');
+        
+        axios.post('/addFriend/' + friend)
+            .then((res) => {
+                if (res.data.error) {
+                    setAddFriendMsg({type: 'err', value: res.data.error});
+                }
+                else {
+                    setAddFriendMsg({type: 'msg', value: res.data});
+                }
+            })
+            .catch(err => {
+                setAddFriendMsg({type: 'err', value: 'Internal Server Error'});
+            })
+            .finally(() => {
+                setTimeout(() => setAddFriendMsg(null), 5000);
+            });
     }
 
     const messagesWithoutDupes = _.uniqBy(messages, "_id");
@@ -207,6 +230,26 @@ export default function Chat() {
                         </div>
                     </div>
                 </div>
+                {addFriendMsg && (
+                    <div className={"text-center " + (addFriendMsg.type === 'err' ? 'text-red-500' : 'text-blue-500')}>{addFriendMsg.value}</div>
+                )}
+                <form className="flex gap-2" onSubmit={addFriend}>
+                    <input type="text"
+                            value={friend}
+                            required
+                            onChange={ev => setFriend(ev.target.value)}
+                            placeholder="Add Friend"
+                            onFocus={() => {setAddFriendMsg({type: 'msg', value: "Enter friend's username"})}}
+                            onBlur={() => {setAddFriendMsg(null)}}
+                            className="bg-white flex-grow border p-2 rounded-sm w-[100%]"
+                    />
+                    <button type='submit' className="bg-blue-500 p-2 text-white rounded-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>
+                    </button>
+
+                </form>
                 <div className="p-2 text-center flex items-center justify-center">
                     <span className="mr-4 text-sm text-gray-600 flex items-center">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
