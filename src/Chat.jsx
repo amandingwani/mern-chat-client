@@ -95,10 +95,13 @@ export default function Chat() {
                     setAddFriendMsg({type: 'err', value: res.data.error});
                 }
                 else {
-                    setAddFriendMsg({type: 'msg', value: res.data});
+                    setAddFriendMsg({type: 'msg', value: res.data.msg});
+                    // add friend to people
+                    setPeople(prev => ([...prev, res.data.friend]));
                 }
             })
             .catch(err => {
+                console.log(err);
                 setAddFriendMsg({type: 'err', value: 'Internal Server Error'});
             })
             .finally(() => {
