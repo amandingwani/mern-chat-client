@@ -250,7 +250,7 @@ export default function Chat() {
                                     (m.sender === selectedUserId || m.sender === id) && (
                                         <div key={m._id} className={(m.sender === id ? 'text-right' : 'text-left')}>
                                             <div className={"inline-block my-2 p-1 rounded-md " + (m.sender === id ? 'bg-blue-500 text-white' : 'bg-white text-gray-500')}>
-                                                <span className="text-[16px] ml-1 mr-4">{m.text}</span>
+                                                <span className="inline-block text-[16px] ml-1 mr-4">{m.text}</span>
                                                 <span className={"text-[11px] " + (m.sender === id ? "text-gray-300" : "text-gray-400")}>{m.formattedTime}</span>
                                             </div>
                                         </div>
