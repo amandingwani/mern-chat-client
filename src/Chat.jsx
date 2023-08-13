@@ -113,6 +113,7 @@ export default function Chat() {
                 setAddFriendMsg({type: 'err', value: 'Internal Server Error'});
             })
             .finally(() => {
+                setFriend('');
                 setTimeout(() => setAddFriendMsg(null), 5000);
             });
     }
