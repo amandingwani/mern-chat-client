@@ -8,8 +8,7 @@ import './Chat.css'
 
 export default function Chat() {
     const [ws, setWs] = useState(null);
-    const [onlinePeople, setOnlinePeople] = useState({});
-    const [offlinePeople, setOfflinePeople] = useState({});
+    const [people, setPeople] = useState([]);
     const [selectedUserId, setSelectedUserId] = useState(null);
     const [newMsgText, setNewMsgText] = useState('');
     const [messages, setMessages] = useState([]);
@@ -45,23 +44,20 @@ export default function Chat() {
         }
     }
 
-    function showOnlinePeople(peopleArr) {
-        const people = {};
-        peopleArr.forEach(({userId, username}) => {
-            if (userId !== id)
-                people[userId] = username;
-        });
-        setOnlinePeople(people);
-    }
-
     function handleMessage(ev) {
         const msgData = JSON.parse(ev.data);
         if ('error' in msgData) {
             setSelectedUserId(null);
             setServerErrorFlag(true);
         }
-        else if ('online' in msgData) {
-            showOnlinePeople(msgData.online);
+        else if ('status' in msgData) {
+            setPeople(people => {
+                return people.map(p => {
+                    if (p._id === msgData.status.userId)
+                        p.online = msgData.status.status;
+                    return p;
+                })
+            });
         }
         else if ('text' in msgData) {
             setMessages(prev => ([...prev, {...msgData, formattedTime: new Date().toLocaleString('en-us', { dateStyle: "short", timeStyle:"short", hour12: false})}]));
@@ -92,7 +88,6 @@ export default function Chat() {
 
     function addFriend(ev) {
         ev.preventDefault();
-        console.log('addFriend');
         
         axios.post('/addFriend/' + friend)
             .then((res) => {
@@ -117,38 +112,17 @@ export default function Chat() {
         messagesBoxRef.current?.lastElementChild?.scrollIntoView();
     }, [messagesWithoutDupes]);
 
-    // set offline people as soon as online people are set
+    // get all friends from api
     useEffect(() => {
-        axios.get('/people').then(res => {
+        axios.get('/friends').then(res => {
             if (res.data.error) {
                 setServerErrorFlag(true);
             }
             else {
-                const allUsersArr = res.data;
-    
-                // offline people = all - online - ourself
-                const onlinePeopleAndMe = {
-                    ...onlinePeople,
-                    [id]: username
-                };
-    
-                const offlinePeopleArr = allUsersArr.filter(u => {
-                    let isUserOnline = false;
-                    Object.keys(onlinePeopleAndMe).forEach(key => {
-                        if (key === u._id)
-                            isUserOnline = true;
-                    });
-                    return !isUserOnline;
-                });
-    
-                let offlinePeopleObjects = {}
-                offlinePeopleArr.forEach(p => {
-                    offlinePeopleObjects[p._id] = p.username;
-                });
-                setOfflinePeople(offlinePeopleObjects);
+                setPeople(res.data);
             }
         })
-    }, [onlinePeople]);
+    }, []);
 
     useEffect(() => {
         if (selectedUserId) {
@@ -194,7 +168,6 @@ export default function Chat() {
         document.documentElement.style.setProperty('--vh', `${vh}px`);
     }
 
-
     return(
         <div className="flex mernchat-main-page">
             <div className="bg-blue-50 w-1/3 flex flex-col">
@@ -205,25 +178,14 @@ export default function Chat() {
                             {!serverErrorFlag && (
                                 <div>
                                     {/* making an array of divs using map */}
-                                    {/* online people */}
-                                    {Object.keys(onlinePeople).map(userId => (
-                                        <Contact key={userId} 
-                                            userId={userId} 
-                                            onClick={() => setSelectedUserId(userId)}
-                                            isSelected={userId === selectedUserId}
-                                            username={onlinePeople[userId]}
-                                            online={true}
-                                        />
-                                    ))}
-                                    {/* offline people */}
-                                    {Object.keys(offlinePeople).map(userId => (
-                                        <Contact key={userId} 
-                                            userId={userId} 
-                                            onClick={() => setSelectedUserId(userId)}
-                                            isSelected={userId === selectedUserId}
-                                            username={offlinePeople[userId]}
-                                            online={false}
-                                        />
+                                    {people.map(person => (
+                                        <Contact key={person._id} 
+                                        userId={person._id} 
+                                        onClick={() => setSelectedUserId(person._id)}
+                                        isSelected={person._id === selectedUserId}
+                                        username={person.username}
+                                        online={person.online}
+                                    />
                                     ))}
                                 </div>
                             )}
