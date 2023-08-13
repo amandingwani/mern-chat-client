@@ -62,6 +62,14 @@ export default function Chat() {
         else if ('text' in msgData) {
             setMessages(prev => ([...prev, {...msgData, formattedTime: new Date().toLocaleString('en-us', { dateStyle: "short", timeStyle:"short", hour12: false})}]));
         }
+        else if ('addFriend' in msgData) {
+            // add friend to people if not already added
+            setPeople(prev => {
+                    if (prev.find(p => p._id === msgData.addFriend._id))
+                        return prev;
+                    return [...prev, msgData.addFriend];
+                })
+        }
     }
 
     function sendMsg(ev) {
